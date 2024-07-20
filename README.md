@@ -50,6 +50,9 @@ The client code connects to the server, sends messages typed by the user, and re
 2. Run multiple instances of the client code.
 3. Type messages in any client instance and see the messages broadcasted to all other connected clients.
 
+## Future Enhancements
+* __File Transfer:__ Working to add file transfer ability to the chat application for sharing files between clients.
+
 ## Conclusions
 This project demonstrates a basic chat application using sockets and threads in C++. It serves as a foundational example for understanding server-client communication, handling multiple connections, and managing message broadcasting.
 
@@ -58,7 +61,7 @@ For further enhancements, consider adding features such as user authentication, 
 Feel free to explore the code and modify it to suit your needs!
 
 ## 🚀 About Me
-My name is Vikas Prajapati, and I am currently pursuing a BTech in Computer Science and Engineering from IIT Jammu. This project is part of my ongoing efforts to explore and understand network programming and concurrent processing using C++.
+My name is __Vikas Prajapati__, and I am currently pursuing __BTech in Computer Science and Engineering from IIT Jammu__. This project is part of my ongoing efforts to explore and understand network programming and concurrent processing using C++.
 
 ## 🔗 Links
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vikas-prajapati-577bab252/)
