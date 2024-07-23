@@ -19,8 +19,7 @@ void cleanup() {
 
 void send_message() {
     memset(buff, 0, sizeof(buff));
-    // Type text message
-    // cout << "Enter your message: ";
+    // Text message
     fgets(buff, SIZE, stdin);
     buff[strcspn(buff, "\n")] = '\0';
 
@@ -34,7 +33,7 @@ void send_message() {
         cleanup();
         return;
     }
-    memset(buff, 0, sizeof(buff)); // Clear buffer before receiving response
+    memset(buff, 0, sizeof(buff));
 }
 
 void receive_messages() {
