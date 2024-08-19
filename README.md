@@ -1,4 +1,3 @@
-
 # Chat Application (Server-Client Model)
 **Note:** Please run these codes using Visual Studio and not Visual Studio Code.
 
@@ -49,9 +48,6 @@ The client code connects to the server, sends messages typed by the user, and re
 1. Start the server.
 2. Run multiple instances of the client code.
 3. Type messages in any client instance and see the messages broadcasted to all other connected clients.
-
-## Future Enhancements
-* __File Transfer:__ Working to add file transfer ability to the chat application for sharing files between clients.
 
 ## Conclusions
 This project demonstrates a basic chat application using sockets and threads in C++. It serves as a foundational example for understanding server-client communication, handling multiple connections, and managing message broadcasting.
