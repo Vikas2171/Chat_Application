@@ -36,19 +36,6 @@ void send_message() {
     memset(buff, 0, sizeof(buff));
 }
 
-void receive_messages() {
-    while (true) {
-        memset(buff, 0, SIZE);
-        nRet = recv(nClientSocket, buff, SIZE, 0);
-            if (nRet <= 0) {
-                cout << "Connection closed by server." << endl;
-                cleanup();
-                exit(EXIT_FAILURE);
-            }
-            cout << buff << endl;
-    }
-}
-
 int main() {
     WSADATA ws;
     if (WSAStartup(MAKEWORD(2, 2), &ws) != 0) {
