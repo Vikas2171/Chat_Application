@@ -45,9 +45,12 @@ The client code connects to the server, sends messages typed by the user, and re
 * Connect to the server by running multiple instances of the client code.
 
 ## Example Usage
-1. Start the server.
-2. Run multiple instances of the client code.
-3. Type messages in any client instance and see the messages broadcasted to all other connected clients.
+1. __Start the server.__
+![Build The Solution](https://github.com/Vikas2171/Chat_Application/blob/main/Photos/1.jpg "Build The Solution")
+![Run The Solution](https://github.com/Vikas2171/Chat_Application/blob/main/Photos/2.jpg "Run The Solution")
+2. __Run multiple clients same as server.__
+3. __Now communicate between clients.__
+![Communication](https://github.com/Vikas2171/Chat_Application/blob/main/Photos/3.jpg "Communication")
 
 ## Conclusions
 This project demonstrates a basic chat application using sockets and threads in C++. It serves as a foundational example for understanding server-client communication, handling multiple connections, and managing message broadcasting.
