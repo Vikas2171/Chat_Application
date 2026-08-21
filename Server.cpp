@@ -13,6 +13,8 @@
 #include <ctime>
 #include <memory>
 
+#include "Framing.h"
+
 using namespace std;
 
 #define PORT 9909
@@ -38,6 +40,8 @@ struct ClientState {
 
     thread reader;
     thread writer;
+
+    LineFramer inFramer; // only ever touched by this client's own reader thread - no lock needed
 
     atomic<bool> tearingDown{ false }; // guards against double cleanup (normal disconnect vs. shutdown)
 
@@ -99,8 +103,8 @@ static void broadcastMessage(const string& msg, int senderId) {
 }
 
 static void startClientThreads(shared_ptr<ClientState> client) {
-    const char* welcome = "Got the connection done successfully.";
-    send(client->socket, welcome, (int)strlen(welcome), 0);
+    string welcome = "Got the connection done successfully.\n";
+    send(client->socket, welcome.c_str(), (int)welcome.size(), 0);
 
     client->reader = thread(clientReaderLoop, client);
     client->writer = thread(clientWriterLoop, client);
@@ -171,13 +175,18 @@ static void clientReaderLoop(shared_ptr<ClientState> client) {
             break; // connection closed gracefully by client
         }
 
-        buff[strcspn(buff, "\n")] = '\0';
-        string tagged = "[Client " + to_string(client->id) + "]: " + buff;
+        // A single recv() can contain a partial message, several messages
+        // back-to-back, or both - TCP has no message boundaries of its own.
+        // inFramer reassembles the newline-delimited messages this protocol
+        // actually sends.
+        for (const string& text : client->inFramer.feed(buff, nRet)) {
+            string tagged = "[Client " + to_string(client->id) + "]: " + text;
 
-        logLine(timestamp() + " | Client " + to_string(client->id) + " | " + buff);
-        logToConsole(tagged);
+            logLine(timestamp() + " | Client " + to_string(client->id) + " | " + text);
+            logToConsole(tagged);
 
-        broadcastMessage(tagged, client->id);
+            broadcastMessage(tagged, client->id);
+        }
     }
 
     removeClient(client);
@@ -194,7 +203,7 @@ static void clientWriterLoop(shared_ptr<ClientState> client) {
             break; // shutting down and nothing left to flush
         }
 
-        string msg = client->outQueue.front();
+        string msg = client->outQueue.front() + "\n"; // frame with the delimiter the protocol expects
         client->outQueue.pop();
         lock.unlock();
 
@@ -340,8 +349,8 @@ int main() {
         }
         else {
             logToConsole("New connection is pending (server full).");
-            const char* fullMsg = "No space available on the server. Your connection is pending.";
-            send(clientSocket, fullMsg, (int)strlen(fullMsg), 0);
+            string fullMsg = "No space available on the server. Your connection is pending.\n";
+            send(clientSocket, fullMsg.c_str(), (int)fullMsg.size(), 0);
         }
     }
 

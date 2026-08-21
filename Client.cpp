@@ -3,6 +3,8 @@
 #include <thread>
 #include <atomic>
 
+#include "Framing.h"
+
 #define PORT 9909
 #define SIZE 1024
 
@@ -48,7 +50,8 @@ static void send_message() {
         return;
     }
 
-    int nRet = send(g_clientSocket, buff, (int)strlen(buff), 0);
+    string framed = string(buff) + "\n"; // the delimiter this protocol frames messages on
+    int nRet = send(g_clientSocket, framed.c_str(), (int)framed.size(), 0);
     if (nRet == SOCKET_ERROR) {
         if (g_running) { // only report if this wasn't already an expected shutdown
             int error = WSAGetLastError();
@@ -60,8 +63,8 @@ static void send_message() {
 
 static void receive_messages() {
     char buff[SIZE];
+    LineFramer framer;
     while (g_running) {
-        memset(buff, 0, SIZE);
         int nRet = recv(g_clientSocket, buff, SIZE, 0);
         if (nRet <= 0) {
             if (g_running) { // only report if this wasn't already an expected shutdown
@@ -70,7 +73,12 @@ static void receive_messages() {
             triggerShutdown();
             break;
         }
-        cout << buff << endl;
+        // A single recv() can contain a partial message, several messages
+        // back-to-back, or both - the framer reassembles the newline-
+        // delimited messages the server actually sends.
+        for (const string& line : framer.feed(buff, nRet)) {
+            cout << line << endl;
+        }
     }
 }
 
@@ -102,15 +110,20 @@ int main() {
     }
     cout << "Connected to the server." << endl;
 
-    char welcomeBuff[SIZE] = { 0 };
-    int nRet = recv(g_clientSocket, welcomeBuff, SIZE, 0);
-    if (nRet <= 0) {
-        cout << "Failed to receive message from server or connection closed." << endl;
-        closesocket(g_clientSocket);
-        WSACleanup();
-        return EXIT_FAILURE;
+    LineFramer welcomeFramer;
+    vector<string> welcomeLines;
+    while (welcomeLines.empty()) {
+        char welcomeBuff[SIZE];
+        int nRet = recv(g_clientSocket, welcomeBuff, SIZE, 0);
+        if (nRet <= 0) {
+            cout << "Failed to receive message from server or connection closed." << endl;
+            closesocket(g_clientSocket);
+            WSACleanup();
+            return EXIT_FAILURE;
+        }
+        welcomeLines = welcomeFramer.feed(welcomeBuff, nRet);
     }
-    cout << "Message received from the server: " << welcomeBuff << endl;
+    cout << "Message received from the server: " << welcomeLines[0] << endl;
 
     thread receiver(receive_messages);
 
