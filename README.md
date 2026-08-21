@@ -6,6 +6,7 @@ This project is a multi-client chat application demonstrating a server-client mo
 ## Project Structure
 * __Server Code (`Server.cpp`):__ Accepts client connections, broadcasts messages, logs chat history, and manages graceful shutdown.
 * __Client Code (`Client.cpp`):__ Connects to the server, sends messages typed by the user, and receives broadcasts.
+* __Shared Framing (`Framing.h`):__ A small header included by both `Server.cpp` and `Client.cpp` defining the newline-delimited wire protocol they both speak, so the two endpoints can't silently drift apart on how messages are framed.
 
 ## Features
 * Multiple clients can connect to the server simultaneously (`MAX_CLIENTS`, default 5).
@@ -30,6 +31,13 @@ Three narrow, single-purpose locks, none of them ever held across a blocking `se
 * A per-client `outMutex`/`condition_variable` — guards that one client's outgoing queue, for its writer thread to wait on.
 * `logMutex` — guards writes to `chatlog.txt`, since multiple reader threads log concurrently and `ofstream` isn't thread-safe for that.
 * `coutMutex` — guards console output for the same reason; without it, concurrent client threads print to the console at the same time and lines interleave mid-word.
+
+### Message framing
+TCP is a byte stream with no message boundaries of its own — a single `recv()` call can return a partial message, several messages concatenated together, or both. The original version of this project assumed one `recv()` call always equaled exactly one message, which happens to hold most of the time on localhost with short messages, but isn't actually guaranteed.
+
+Messages are now framed as **newline-delimited text** (the same style IRC uses): every send appends a `\n` after the message, and every read runs incoming bytes through a small `LineFramer` (`Framing.h`) that buffers partial data and only hands back complete, delimiter-stripped messages — including a message split across two `recv()` calls or two messages arriving coalesced in one. Both `Server.cpp` and `Client.cpp` include the same `Framing.h`, so the two sides can't independently drift on how a message boundary is defined.
+
+This is the right-sized framing choice for a plain-text, line-based protocol like this one. A binary or multiplexed protocol (e.g. gRPC, or platforms like Telegram/WhatsApp) would use length-prefixed binary framing instead, since delimiter framing only works when the payload itself can't contain the delimiter byte — true here because every message originates from a single line of console input.
 
 ### Client identity
 Each connection gets a monotonically increasing integer `clientId` assigned at accept time, used for broadcast tags (`[Client <id>]: <message>`), console logging, and the chat log — rather than the raw `SOCKET` handle, which gets reused after `closesocket()` and would let a new connection inherit a stale identity.
@@ -84,7 +92,7 @@ This repo includes a ready-to-use VS Code setup under `.vscode/` that drives the
 ![Communication](https://github.com/Vikas2171/Chat_Application/blob/main/Photos/3.jpg "Communication")
 
 ## Conclusions
-This project demonstrates a thread-per-connection chat server in C++: concurrent client handling, per-connection message queues to avoid head-of-line blocking on a slow client, coordinated multithreaded shutdown, and basic chat logging. It's a foundational example of the concurrency and synchronization patterns that come up in real network services, along with an honest accounting of where a production system (encryption, IOCP-based scaling) would go further than this project's scope.
+This project demonstrates a thread-per-connection chat server in C++: concurrent client handling, per-connection message queues to avoid head-of-line blocking on a slow client, coordinated multithreaded shutdown, correct message framing over a raw TCP byte stream, and basic chat logging. It's a foundational example of the concurrency, synchronization, and protocol-design patterns that come up in real network services, along with an honest accounting of where a production system (encryption, IOCP-based scaling) would go further than this project's scope.
 
 Feel free to explore the code and modify it to suit your needs!
 
