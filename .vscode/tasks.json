@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Server (MSVC)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\.vscode\\build.bat",
+            "args": ["Server"],
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Client (MSVC)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\.vscode\\build.bat",
+            "args": ["Client"],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Server",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\Server.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "externalTerminal",
+            "preLaunchTask": "Build Server (MSVC)"
+        },
+        {
+            "name": "Debug Client",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\Client.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "externalTerminal",
+            "preLaunchTask": "Build Client (MSVC)"
+        }
+    ]
+}
